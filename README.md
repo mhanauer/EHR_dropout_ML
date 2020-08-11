@@ -427,8 +427,8 @@ kappa: It is the agreement between models accounting for random chance.
 expand.grid: Although, we chose against this (we ran it and found similar results), if you wanted to expand the grid search of parameters, you could use the expand.grid function.
 ```{r}
 set.seed(825)
-gbmGrid <-  expand.grid(interaction.depth = c(9:12), 
-                        n.trees = (50:60)*10, 
+gbmGrid <-  expand.grid(interaction.depth = c(11:13), 
+                        n.trees = (60:65)*10, 
                         shrinkage = 0.1,
                         n.minobsinnode = 20)
 
