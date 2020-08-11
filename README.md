@@ -373,6 +373,7 @@ impute_dat_noms_out_drug = list()
 for(i in 1:length(impute_dat_noms_out)){
   impute_dat_noms_out[[i]]$drug_use =NULL
 }
+#### 
 
 ```
 
@@ -427,8 +428,8 @@ kappa: It is the agreement between models accounting for random chance.
 expand.grid: Although, we chose against this (we ran it and found similar results), if you wanted to expand the grid search of parameters, you could use the expand.grid function.
 ```{r}
 set.seed(825)
-gbmGrid <-  expand.grid(interaction.depth = c(11:13), 
-                        n.trees = (60:65)*10, 
+gbmGrid <-  expand.grid(interaction.depth = c(12:14), 
+                        n.trees = (70:75)*10, 
                         shrinkage = 0.1,
                         n.minobsinnode = 20)
 
@@ -449,6 +450,7 @@ gbmFit_house_drop_out = train(drop_out ~ ., data = train_out[[1]],
                  tuneGrid  = gbmGrid)
 
 gbmFit_house_drop_out
+gbmFit_house_out =  gbmFit_house_drop_out 
 
 
 ```
