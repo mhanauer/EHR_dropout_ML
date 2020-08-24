@@ -193,12 +193,13 @@ telehealth_noms_wide_noms = merge(telehealth_noms_base_noms, telehealth_noms_mon
 dim(telehealth_noms_wide_noms)
 telehealth_noms_wide_noms = telehealth_noms_wide_noms[order(telehealth_noms_wide_noms$ConsumerID_grant),]
 telehealth_noms_month6_noms = telehealth_noms_month6_noms[order(telehealth_noms_month6_noms$ConsumerID_grant),]
-telehealth_noms_wide_noms$drop_out = is.na(telehealth_noms_wide_noms$ConductedInterview.y)
-telehealth_noms_wide_noms$drop_out = ifelse(telehealth_noms_wide_noms$drop_out == TRUE, 1, 0)
+telehealth_noms_wide_noms$drop_out = ifelse(telehealth_noms_wide_noms$ConductedInterview.y == 0, 1, 0)
 describe.factor(telehealth_noms_wide_noms$drop_out)
 head(telehealth_noms_month6_noms)
-
-
+### Use first received services, because the date is always there; however, some vairation (0 to 15 dayes)
+telehealth_noms_wide_noms$FirstReceivedServicesDate.y = mdy(telehealth_noms_wide_noms$FirstReceivedServicesDate.y)
+### Only clients who are eligible for 6-month reassessments
+telehealth_noms_wide_noms = subset(telehealth_noms_wide_noms, FirstReceivedServicesDate.y < Sys.Date()-6*30)
 ```
 
 The code below is an example of using machine learning to predict housing generally based on Kuhn (2019) guide: https://topepo.github.io/caret/
@@ -301,8 +302,15 @@ vif_list = data.frame(vif_list)
 vif_list = subset(vif_list, vif_list > 5)
 vif_list
 ```
+Quick review of descriptives
+```{r}
+apply(machine_dat, 2, function(x){describe.factor(x)})
+```
+
+
 Let's figure out how to address missing data within xgboost
 ```{r}
+colnames(machine_dat) = gsub(".x", "", colnames(machine_dat))
 write.csv(machine_dat, "drop_out_8_10_20.csv", row.names = FALSE)
 ```
 
