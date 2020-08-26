@@ -304,7 +304,22 @@ vif_list
 ```
 Quick review of descriptives
 ```{r}
-apply(machine_dat, 2, function(x){describe.factor(x)})
+machine_dat[,c(1:4, 32, 34, 42:45,47,48:51)] = apply(machine_dat[,c(1:4, 32, 34, 42:45, 47, 48:51)], 2, function(x){as.factor(x)})
+
+colnames(machine_dat) = gsub(".x", "", colnames(machine_dat))
+part_charac =  prettyR::describe(machine_dat)
+num_charac = data.frame(part_charac$Numeric)
+num_charac = num_charac[c(1,4),]
+num_charac = t(num_charac)
+num_charac = round(num_charac,2) 
+
+write.csv(num_charac, "num_charac.csv")
+
+fac_charac = data.frame(part_charac$Factor)
+fac_charac = round(fac_charac,2)
+fac_charac = t(fac_charac)
+write.csv(fac_charac, "fac_charac.csv")
+
 ```
 
 
