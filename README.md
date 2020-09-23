@@ -51,22 +51,23 @@ telehealth: Telehealth = 1; Pre-telehealth = 0 telehealth defined as those with 
 library(prettyR)
 library(see)
 library(performance)
+
 ###
 setwd("T:/CRI_Research/telehealth_evaluation/data_codebooks")
 
 ## Run this for machine learning
-IN =  read.csv("CCBHC_IN_8.10.20.csv", header = TRUE, na.strings =  c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
-
+setwd("T:/CRI_Research/telehealth_evaluation/data_codebooks")
+IN_2019 =  read.csv("CCBHC_IN_9_23_20_2019.csv", header = TRUE, na.strings =  c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
+IN_2020 = read.csv("CCBHC_IN_9_23_20_2020.csv", header = TRUE, na.strings =  c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
+IN = rbind(IN_2019, IN_2020)
 # Run this FHHC for machine learning data
-FHHC = read.csv("fhhc_noms_8_10_20.csv", header= TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
+FHHC = read.csv("fhhc_noms_9_23_20.csv", header= TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
 
 ICP = read.csv("SPARS Data Download 5.23.2020_ICP.csv", header = TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
 SOCAT = read.csv("SOCAT NOMs download 5.27.20.csv", header = TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
 #Run this for machine learning
-IL_adult = read.csv("IL_adult_8_10_20.csv", header = TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
+IL = read.csv("IL_9_23_20.csv", header = TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
 
-### Run this for machine learning
-IL_youth = read.csv("IL_youth_8_10_20.csv", header = TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
 FL_ACT = read.csv("FL-ACT SPARS data download  5.28.2020.csv", header = TRUE, na.strings = c(-99, -98, -1, -2, -3, -4, -5, -6, -7, -8, -9))
 
 ## Now stack them
@@ -96,46 +97,23 @@ SOCAT_full$TimesER = SOCAT$TimesER
 SOCAT_full$Housing = SOCAT$Housing
 SOCAT = SOCAT_full
 
-IL_youth$RespondentType = NULL
-IL_youth_matrix = matrix(NA, ncol = 185-43, nrow = dim(IL_youth)[1])
-IL_youth_matrix = data.frame(IL_youth_matrix)
-colnames(IL_youth_matrix) = colnames(ICP[,44:185])
-IL_youth_full = data.frame(IL_youth[,1:43], IL_youth_matrix)
-dim(IL_youth_full)
-### Change variables that match
-IL_youth_full$Nervous = IL_youth$Nervous
-IL_youth_full$Hopeless = IL_youth$Hopeless
-IL_youth_full$Restless = IL_youth$Restless
-IL_youth_full$Depressed = IL_youth$Depressed
-IL_youth_full$EverythingEffort = IL_youth$EverythingEffort
-IL_youth_full$Worthless = IL_youth$Worthless
-IL_youth_full$Tobacco_Use = IL_youth$Tobacco_Use
-IL_youth_full$Alcohol_Use = IL_youth$Alcohol_Use
-IL_youth_full$StreetOpioids_Use = IL_youth$StreetOpioids_Use
-IL_youth_full$RxOpioids_Use = IL_youth$RxOpioids_Use
-IL_youth_full$NightsHomeless = IL_youth$NightsHomeless
-IL_youth_full$NightsHospitalMHC = IL_youth$NightsHospitalMHC
-IL_youth_full$NightsDetox = IL_youth$NightsDetox
-IL_youth_full$NightsJail = IL_youth$NightsJail
-IL_youth_full$TimesER = IL_youth$TimesER
-IL_youth_full$Housing = IL_youth$Housing
-IL_youth = IL_youth_full
 
-IN_IL_KY_CCBHC = rbind(IN[,1:185], IL_youth[,1:185], IL_adult[,1:185])
-dim(IN_IL_KY_CCBHC)
+
+IN_IL_CCBHC = rbind(IN[,1:185], IL[,1:185])
+dim(IN_IL_CCBHC)
 FHHC = FHHC[,1:185]
 ICP = ICP[,1:185]
 FL_ACT = FL_ACT[,1:185]
 dim(ICP)
 dim(SOCAT)
 ### Add grant ID
-IN_IL_KY_CCBHC$grant = rep("IN_IL_KY_CCBHC", dim(IN_IL_KY_CCBHC)[1])
+IN_IL_CCBHC$grant = rep("IN_IL_CCBHC", dim(IN_IL_CCBHC)[1])
 FHHC$grant = rep("FHHC", dim(FHHC)[1])
 ICP$grant = rep("ICP", dim(ICP)[1])
 SOCAT$grant = rep("SOCAT", dim(SOCAT)[1])
 FL_ACT$grant = rep("FL_ACT", dim(FL_ACT)[1])
 dim(SOCAT)
-telehealth_noms = rbind(IN_IL_KY_CCBHC, FHHC, ICP, SOCAT, FL_ACT)
+telehealth_noms = rbind(IN_IL_CCBHC, FHHC, ICP, SOCAT, FL_ACT)
 dim(telehealth_noms)
 ### Create a new ConsumerID that is a mix of grant and ConsumerID
 telehealth_noms$ConsumerID_grant = paste0(telehealth_noms$ConsumerID, telehealth_noms$GrantID)
@@ -196,7 +174,7 @@ telehealth_noms_month6_noms = telehealth_noms_month6_noms[order(telehealth_noms_
 telehealth_noms_wide_noms$drop_out = ifelse(telehealth_noms_wide_noms$ConductedInterview.y == 0, 1, 0)
 describe.factor(telehealth_noms_wide_noms$drop_out)
 head(telehealth_noms_month6_noms)
-### Use first received services, because the date is always there; however, some vairation (0 to 15 dayes)
+### Use first received services, because the date is always there; however, some vairation (0 to 15 days)
 telehealth_noms_wide_noms$FirstReceivedServicesDate.y = mdy(telehealth_noms_wide_noms$FirstReceivedServicesDate.y)
 ### Only clients who are eligible for 6-month reassessments
 telehealth_noms_wide_noms = subset(telehealth_noms_wide_noms, FirstReceivedServicesDate.y < Sys.Date()-6*30)
