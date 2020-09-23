@@ -221,7 +221,7 @@ machine_dat$Housing.x = ifelse(machine_dat$Housing.x == 1, 1,0)
 
 ## Add grant.x break into CCBHC or not
 describe.factor(machine_dat$grant.x)
-machine_dat$grant.x = ifelse(machine_dat$grant.x == "IN_IL_KY_CCBHC", 1, 0)
+machine_dat$grant.x = ifelse(machine_dat$grant.x == "IN_IL_CCBHC", 1, 0)
 
 ```
 We next continued to pre-process the data by identifying near-zero variance variables.  We used the nearZeroVar function in caret to identify variables with large (i.e., higher than 19) ratios of the first to second most frequent variables.
@@ -299,79 +299,8 @@ fac_charac = t(fac_charac)
 write.csv(fac_charac, "fac_charac.csv")
 
 ```
-
-
-Let's figure out how to address missing data within xgboost
+Write the csv
 ```{r}
-colnames(machine_dat) = gsub(".x", "", colnames(machine_dat))
-write.csv(machine_dat, "drop_out_8_10_20.csv", row.names = FALSE)
+write.csv(machine_dat, "drop_dat_9_23_20.csv", row.names = FALSE)
 ```
-
-
-Next, we are evaluating the missing data using the Amelia package with five imputations.  The Amelia package has advantages over other packages (e.g., MICE), because we can set the type of variable (i.e., nominal, log).  In my personal experience, I have found the noms function works for binary variables better than binary, and a nominal regression with binary data reduces to a logistic regression.  More information on data imputation is available in the Amelia package documentation: https://gking.harvard.edu/amelia
-```{r}
-library(Amelia)
-library(prettyR)
-miss_var_summary(machine_dat)
-#a.out_noms = amelia(x = machine_dat, m = 5, noms = c("Gender.x", "RaceWhite.x", "RaceBlack.x", "Employment.x", "Housing.x", "telehealth.x", "Housing.y", "anxiety", "mdd_r", "mdd_s", "another_sex_ident", "grant.x", "EverServed.x", "ActiveDuty_Else.x"), ords = c("Quarter.x", "Agegroup.x", "OverallHealth.x", "CapableManagingHealthCareNeeds.x", "HandlingDailyLife.x", "ControlLife.x", "DealWithCrisis.x", "GetsAlongWithFamily.x", "SocialSituations.x", "FunctioningHousing.x", "Symptoms.x", "Nervous.x", "Hopeless.x", "Restless.x", "Depressed.x", "EverythingEffort.x", "Worthless.x", "PsychologicalEmotionalProblems.x", "LifeQuality.x", "EnoughEnergyForEverydayLife.x", "PerformDailyActivitiesSatisfaction.x", "HealthSatisfaction.x", "RelationshipSatisfaction.x", "SelfSatisfaction.x", "Tobacco_Use.x", "Alcohol_Use.x", "Cannabis_Use.x", "ViolenceTrauma.x", "Education.x", "EnoughMoneyForNeeds.x", "Friendships.x", "EnjoyPeople.x", "BelongInCommunity.x", "SupportFromFamily.x", "SupportiveFamilyFriends.x", "GenerallyAccomplishGoal.x"), logs = c("drug_use" ,"er_hos_use_base", "jail_arrest_base", "NightsHomeless.x"))
-
-#saveRDS(a.out_noms, file = "a.out_noms_8_21_20.rds")
-setwd("T:/CRI_Research/telehealth_evaluation/data_codebooks")
-a.out_noms = readRDS(file = "a.out_noms_8_21_20.rds")
-impute_dat_noms = a.out_noms$imputations
-```
-We also compared the densities of the observed data versus the model imputed.  Overall the distributions match with some imputations having flatter distributions where some variables spike.  However, drug use imputed values are about one unit higher than observed values. 
-```{r}
-compare.density(a.out_noms, var = "GetsAlongWithFamily.x")
-compare.density(a.out_noms, var = "RelationshipSatisfaction.x")
-compare.density(a.out_noms, var = "drug_use")
-compare.density(a.out_noms, var = "Housing.y")
-```
-
-Because the number of rows is different for each data you may need to just take the average and create one data set.  Should be fine, because you are only using the parameter values and not estimating standard errors for the values.  Will reduce looping code.
-```{r}
-
-### Sum data frames and then for the binary ones reduce to 0 if total is less 2.5 and 1 if greater and then divide by five for all the quantitative variables
-impute_dat_noms = impute_dat_noms[[1]]+impute_dat_noms[[2]]+impute_dat_noms[[3]]+impute_dat_noms[[4]]+impute_dat_noms[[5]]
-
-impute_dat_noms[,c(2:4, 32, 34, 42:46, 48:51)] = apply(impute_dat_noms[,c(2:4, 32, 34, 42:46, 48:51)], 2, function(x){ifelse(x >= 2.5, 1, 0)})
-
-impute_dat_noms[,c(2:4, 32, 34, 42:46, 48:51)] = apply(impute_dat_noms[,c(2:4, 32, 34, 42:46, 48:51)], 2, function(x){as.factor(x)})
-
-### Now divide each value by five
-impute_dat_noms[,-c(2:4, 32, 34, 42:46, 48:51)] = impute_dat_noms[,-c(2:4, 32, 34, 42:46, 48:51)] / 5
-impute_dat_noms
-### Get rid of the x's
-colnames(impute_dat_noms) = gsub(".x", "", colnames(impute_dat_noms))
-
-
-```
-Participant descriptives
-```{r}
-dim(impute_dat_noms)
-impute_dat_noms[,c(2:4, 32, 34, 42:46, 48:51)] = apply(impute_dat_noms[,c(2:4, 32, 34, 42:46, 48:51)], 2, function(x){as.factor(x)})
-
-part_charac =  prettyR::describe(impute_dat_noms[-c(1)])
-num_charac = data.frame(part_charac$Numeric)
-num_charac = num_charac[c(1,4),]
-num_charac = t(num_charac)
-num_charac = round(num_charac,2) 
-
-write.csv(num_charac, "num_charac.csv")
-
-fac_charac = data.frame(part_charac$Factor)
-fac_charac = round(fac_charac,2)
-fac_charac = t(fac_charac)
-write.csv(fac_charac, "fac_charac.csv")
-
-```
-Scale the numeric data and then turn into csv for machine learning in Python
-Need to scale in Python so you can save the means and sds
-```{r}
-#impute_dat_noms[,-c(2:4, 32, 34, 42:46, 48:51)] = apply(impute_dat_noms[,-c(2:4, 32, 34, 42:46, 48:51)], 2, function(x){scale(x)})
-
-write.csv(impute_dat_noms, "house_dat_8_13_20_scaled.csv", row.names = FALSE)
-
-```
-
 
