@@ -177,6 +177,7 @@ head(telehealth_noms_month6_noms)
 ### Use first received services, because the date is always there; however, some vairation (0 to 15 days)
 telehealth_noms_wide_noms$FirstReceivedServicesDate.y = mdy(telehealth_noms_wide_noms$FirstReceivedServicesDate.y)
 ### Only clients who are eligible for 6-month reassessments
+### Change this to 2020-09-30
 telehealth_noms_wide_noms = subset(telehealth_noms_wide_noms, FirstReceivedServicesDate.y < Sys.Date()-6*30)
 ```
 
